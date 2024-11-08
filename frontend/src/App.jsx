@@ -1,12 +1,13 @@
-import { useState } from "react";
-import LandingPage from "./components/landingpage";
 
-function App() {
+import { Routes, Route, BrowserRouter } from "react-router-dom";
+import Chatbot from "./pages/ChatBot";
+
+export default function App() {
   return (
-    <>
-      <LandingPage />
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/chat" element={<Chatbot />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
-
-export default App;
