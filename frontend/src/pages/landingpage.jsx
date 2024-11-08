@@ -14,9 +14,9 @@ function LandingPage() {
       <div className="w-1/2"></div>
       <div className="z-10 mt-32 flex w-1/2 max-w-fit flex-col gap-y-4 text-5xl font-bold text-white">
         <div className="flex flex-row gap-8">
-          <BiWorld />
-          <IoMap />
-          <AiFillEnvironment />
+          <BiWorld className="hover:scale-105" />
+          <IoMap className="hover:scale-105" />
+          <AiFillEnvironment className="hover:scale-105" />
         </div>
         <div className="mt-10">
           <h1 className="text-left">Queens</h1>
@@ -31,7 +31,7 @@ function LandingPage() {
         </p>
 
         <a
-          className="mt-12 w-fit rounded-full bg-[rgb(37,218,197)] px-6 py-4 text-sm font-normal"
+          className="mt-12 w-fit rounded-full bg-[rgb(37,218,197)] px-6 py-4 text-sm font-normal transition-all duration-200 hover:scale-105 hover:bg-teal-500"
           href="#map"
         >
           Go to Map
