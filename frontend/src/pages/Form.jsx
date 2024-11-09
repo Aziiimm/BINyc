@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import NavBar from "../components/Header";
 import { FaFileUpload } from "react-icons/fa";
+import axios from "axios";
 
 const Form = () => {
   const [formData, setFormData] = useState({
@@ -77,7 +78,7 @@ const Form = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // List of required fields
@@ -103,11 +104,27 @@ const Form = () => {
 
     // Get current time and update form data
     const currentTime = new Date().toLocaleString();
-    setFormData({ ...formData, time: currentTime });
+    const updatedFormData = { ...formData, time: currentTime };
 
-    // Submit the form (you can replace this with actual form submission logic)
-    console.log({ ...formData, time: currentTime });
-    alert("Form submitted successfully!");
+    // Create FormData object to handle file upload
+    const formDataToSend = new FormData();
+    Object.keys(updatedFormData).forEach((key) => {
+      formDataToSend.append(key, updatedFormData[key]);
+    });
+
+    try {
+      // Make a POST request to the backend (Removed manual Content-Type header)
+      const response = await axios.post(
+        "http://localhost:3000/api/form",
+        formDataToSend,
+      );
+
+      alert("Form submitted successfully!");
+      console.log(response.data);
+    } catch (error) {
+      console.error("Error submitting form:", error.message);
+      alert("An error occurred while submitting the form.");
+    }
   };
 
   return (
@@ -201,6 +218,7 @@ const Form = () => {
               <option value="Current Location">Use Current Location</option>
             </select>
           </div>
+
           {/* Location Field */}
           <div>
             <label className="mb-2 block text-sm font-medium text-[rgb(96,147,93)] underline">

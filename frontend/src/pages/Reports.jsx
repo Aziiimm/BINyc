@@ -22,7 +22,7 @@ const MapCenter = ({ coordinates }) => {
   const map = useMap();
   useEffect(() => {
     if (coordinates) {
-      map.setView(coordinates, 14, { animate: true });
+      map.flyTo(coordinates, 14, { animate: true });
     }
   }, [coordinates, map]);
   return null;
@@ -45,16 +45,29 @@ const Reports = () => {
         }
         const data = await response.json();
 
-        // Transform data if necessary (e.g., extract coordinates)
-        const formattedData = data.map((item) => ({
-          id: item._id,
-          title: item.title || "Untitled Report",
-          description: item.Description || "No description provided.",
-          bounty: item.Bounty || "No bounty",
-          date: item.Time || "Unknown date",
-          coordinates: item.Location || [40.73061, -73.935242], // Fallback coordinates
-          distance: "Unknown distance", // Placeholder, calculate if needed
-        }));
+        // Transform data
+        const formattedData = data.map((item) => {
+          // Parse coordinates string into an array of numbers
+          let coordinatesArray = [40.73061, -73.935242]; // Default fallback coordinates
+          if (item.location) {
+            const coords = item.location
+              .split(",")
+              .map((coord) => parseFloat(coord.trim()));
+            if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+              coordinatesArray = coords;
+            }
+          }
+
+          return {
+            id: item._id,
+            title: item.title || "Untitled Report",
+            description: item.description || "No description provided.",
+            bounty: item.bounty || "No bounty",
+            date: item.time || "Unknown date",
+            coordinates: coordinatesArray,
+            distance: "Unknown distance",
+          };
+        });
 
         setReports(formattedData);
         setLoading(false);
