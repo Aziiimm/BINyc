@@ -17,6 +17,29 @@ const customIcon = new L.DivIcon({
   popupAnchor: [0, -24],
 });
 
+// Helper function to calculate distance using the Haversine formula (in miles)
+const haversineDistance = (coords1, coords2) => {
+  const toRad = (value) => (value * Math.PI) / 180;
+
+  const [lat1, lon1] = coords1;
+  const [lat2, lon2] = coords2;
+
+  const R = 6371; // Radius of Earth in kilometers
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distanceInKm = R * c;
+
+  // Convert kilometers to miles
+  const distanceInMiles = distanceInKm * 0.621371;
+  return distanceInMiles;
+};
+
 // Component to Center the Map
 const MapCenter = ({ coordinates }) => {
   const map = useMap();
@@ -45,9 +68,8 @@ const Reports = () => {
         }
         const data = await response.json();
 
-        // Transform data
+        // Transform data and calculate distance
         const formattedData = data.map((item) => {
-          // Parse coordinates string into an array of numbers
           let coordinatesArray = [40.73061, -73.935242]; // Default fallback coordinates
           if (item.location) {
             const coords = item.location
@@ -58,6 +80,10 @@ const Reports = () => {
             }
           }
 
+          const distance = haversineDistance(
+            userLocation,
+            coordinatesArray,
+          ).toFixed(2);
           return {
             id: item._id,
             title: item.title || "Untitled Report",
@@ -65,7 +91,7 @@ const Reports = () => {
             bounty: item.bounty || "No bounty",
             date: item.time || "Unknown date",
             coordinates: coordinatesArray,
-            distance: "Unknown distance",
+            distance: `${distance} miles`,
           };
         });
 
@@ -79,7 +105,7 @@ const Reports = () => {
     };
 
     fetchData();
-  }, []);
+  }, [userLocation]);
 
   // Fetch user's current location
   useEffect(() => {
@@ -148,6 +174,9 @@ const Reports = () => {
                     <p>
                       <strong>Posted:</strong> {report.date}
                     </p>
+                    <p>
+                      <strong>Distance:</strong> {report.distance}
+                    </p>
                   </Popup>
                 </Marker>
               ))}
@@ -176,6 +205,9 @@ const Reports = () => {
                   </p>
                   <p className="text-sm">
                     <strong>Date:</strong> {report.date}
+                  </p>
+                  <p className="text-sm">
+                    <strong>Distance:</strong> {report.distance}
                   </p>
                 </div>
 
