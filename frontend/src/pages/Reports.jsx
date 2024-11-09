@@ -58,55 +58,6 @@ const Reports = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch reports data from API
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("http://localhost:3000/api/data");
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
-        }
-        const data = await response.json();
-
-        // Transform data and calculate distance
-        const formattedData = data.map((item) => {
-          let coordinatesArray = [40.73061, -73.935242]; // Default fallback coordinates
-          if (item.location) {
-            const coords = item.location
-              .split(",")
-              .map((coord) => parseFloat(coord.trim()));
-            if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
-              coordinatesArray = coords;
-            }
-          }
-
-          const distance = haversineDistance(
-            userLocation,
-            coordinatesArray,
-          ).toFixed(2);
-          return {
-            id: item._id,
-            title: item.title || "Untitled Report",
-            description: item.description || "No description provided.",
-            bounty: item.bounty || "No bounty",
-            date: item.time || "Unknown date",
-            coordinates: coordinatesArray,
-            distance: `${distance} miles`,
-          };
-        });
-
-        setReports(formattedData);
-        setLoading(false);
-      } catch (err) {
-        console.error("Failed to fetch reports:", err);
-        setError(err.message);
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [userLocation]);
-
   // Fetch user's current location
   useEffect(() => {
     if (navigator.geolocation) {
@@ -121,6 +72,68 @@ const Reports = () => {
       );
     }
   }, []);
+
+  // Fetch reports data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/data");
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+        const data = await response.json();
+
+        // Transform data and calculate distance
+        const formattedData = data.map((item) => {
+          // Parse coordinates string into an array of numbers
+          let coordinatesArray = [40.73061, -73.935242]; // Default fallback coordinates
+          if (item.location) {
+            const coords = item.location
+              .split(",")
+              .map((coord) => parseFloat(coord.trim()));
+            if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+              coordinatesArray = coords;
+            }
+          }
+
+          // Calculate distance from user's location
+          const distance = haversineDistance(
+            userLocation,
+            coordinatesArray,
+          ).toFixed(2);
+
+          // Construct the image URL
+          const imageUrl = item.image
+            ? `http://localhost:3000${item.image}`
+            : null;
+
+          return {
+            id: item._id,
+            title: item.title || "Untitled Report",
+            description: item.description || "No description provided.",
+            bounty: item.bounty || "No bounty",
+            date: item.time || "Unknown date",
+            coordinates: coordinatesArray,
+            distance: `${distance} miles`,
+            image: imageUrl,
+            locationType: item.locationType || "Unknown",
+            name: item.name || "Anonymous",
+            phoneNumber: item.phoneNumber || "N/A",
+            email: item.email || "N/A",
+          };
+        });
+
+        setReports(formattedData);
+        setLoading(false);
+      } catch (err) {
+        console.error("Failed to fetch reports:", err);
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [userLocation]);
 
   const handleReportClick = (coordinates) => {
     setSelectedCoordinates(coordinates);
@@ -167,6 +180,14 @@ const Reports = () => {
                 >
                   <Popup>
                     <h3 className="font-bold">{report.title}</h3>
+                    {report.image && (
+                      <img
+                        src={report.image}
+                        alt={report.title}
+                        className="mb-2 h-auto w-full"
+                        style={{ maxHeight: "150px", objectFit: "cover" }}
+                      />
+                    )}
                     <p>{report.description}</p>
                     <p>
                       <strong>Bounty:</strong> {report.bounty}
@@ -176,6 +197,16 @@ const Reports = () => {
                     </p>
                     <p>
                       <strong>Distance:</strong> {report.distance}
+                    </p>
+                    <p>
+                      <strong>Location Type:</strong> {report.locationType}
+                    </p>
+                    <p>
+                      <strong>Reported By:</strong> {report.name}
+                    </p>
+                    <p>
+                      <strong>Contact:</strong> {report.phoneNumber} |{" "}
+                      {report.email}
                     </p>
                   </Popup>
                 </Marker>
@@ -199,6 +230,14 @@ const Reports = () => {
                   <h3 className="text-md font-bold underline">
                     {report.title}
                   </h3>
+                  {report.image && (
+                    <img
+                      src={report.image}
+                      alt={report.title}
+                      className="mb-2 h-auto w-full"
+                      style={{ maxHeight: "100px", objectFit: "cover" }}
+                    />
+                  )}
                   <p className="text-sm text-gray-700">{report.description}</p>
                   <p className="text-sm">
                     <strong>Bounty:</strong> {report.bounty}
@@ -208,6 +247,16 @@ const Reports = () => {
                   </p>
                   <p className="text-sm">
                     <strong>Distance:</strong> {report.distance}
+                  </p>
+                  <p className="text-sm">
+                    <strong>Location Type:</strong> {report.locationType}
+                  </p>
+                  <p className="text-sm">
+                    <strong>Reported By:</strong> {report.name}
+                  </p>
+                  <p className="text-sm">
+                    <strong>Contact:</strong> {report.phoneNumber} |{" "}
+                    {report.email}
                   </p>
                 </div>
 
