@@ -10,28 +10,26 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(cors());
-
-// Set up multer for file handling
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "uploads"));
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
 
-const upload = multer({ storage });
+const upload = multer({ dest: "uploads/" });
 
 // Endpoint for form submission
 app.post("/api/form", upload.single("image"), async (req, res) => {
   try {
-    // Log the received data for debugging
-    console.log("Received body:", req.body);
-    console.log("Received file:", req.file);
-
+    
+    const file = req.file;
     const database = await db();
     const reportsCollection = database.collection("garbageReport");
+
+    const ipfsHashes = await Promise.all(
+      files.map(async (file) => {
+        const ipfsHash = await uploadToIPFS(file.path, description);
+        return ipfsHash;
+      })
+    );
 
     const report = {
       title: req.body.title,
@@ -44,6 +42,7 @@ app.post("/api/form", upload.single("image"), async (req, res) => {
       name: req.body.name,
       phoneNumber: req.body.phoneNumber,
       email: req.body.email,
+      CID: ipfsHashes,
     };
 
     const result = await reportsCollection.insertOne(report);
@@ -52,14 +51,12 @@ app.post("/api/form", upload.single("image"), async (req, res) => {
       message: "Data inserted successfully",
       report: { _id: result.insertedId, ...report },
     });
+
   } catch (error) {
     console.error("Error inserting data:", error.message);
     res.status(500).json({ error: `An error occurred: ${error.message}` });
   }
 });
-
-// Endpoint to serve uploaded images
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/api/data", async (req, res) => {
   try {
@@ -74,6 +71,3 @@ app.get("/api/data", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});

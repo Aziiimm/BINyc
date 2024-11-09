@@ -7,7 +7,7 @@ const Form = () => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    image: null,
+    images: [],  // Change `image` to `images` for handling multiple files
     location: "",
     time: "",
     bounty: "",
@@ -28,15 +28,15 @@ const Form = () => {
   };
 
   const handleFileChange = (e) => {
-    setFormData({
-      ...formData,
-      image: e.target.files[0],
-    });
+    const files = Array.from(e.target.files);  // Handle multiple files
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      images: files,
+    }));
   };
 
   const handleLocationTypeChange = (e) => {
     const value = e.target.value;
-
     if (value === "Current Location") {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -58,7 +58,7 @@ const Form = () => {
               locationType: value,
               location: "Error fetching location",
             });
-          },
+          }
         );
       }
     } else {
@@ -81,11 +81,10 @@ const Form = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // List of required fields
     const requiredFields = [
       "title",
       "description",
-      "image",
+      "images",
       "location",
       "bounty",
       "locationType",
@@ -94,7 +93,6 @@ const Form = () => {
       "email",
     ];
 
-    // Check for empty fields
     for (const field of requiredFields) {
       if (!formData[field] || formData[field].toString().trim() === "") {
         alert(`Please fill in the ${field} field.`);
@@ -102,21 +100,28 @@ const Form = () => {
       }
     }
 
-    // Get current time and update form data
     const currentTime = new Date().toLocaleString();
     const updatedFormData = { ...formData, time: currentTime };
 
     // Create FormData object to handle file upload
     const formDataToSend = new FormData();
     Object.keys(updatedFormData).forEach((key) => {
-      formDataToSend.append(key, updatedFormData[key]);
+      if (key === "images") {
+        updatedFormData.images.forEach((file, index) => {
+          formDataToSend.append(`images[${index}]`, file);
+        });
+      } else {
+        formDataToSend.append(key, updatedFormData[key]);
+      }
     });
 
     try {
-      // Make a POST request to the backend (Removed manual Content-Type header)
       const response = await axios.post(
         "http://localhost:3000/api/form",
         formDataToSend,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
       );
 
       alert("Form submitted successfully!");
@@ -136,174 +141,27 @@ const Form = () => {
             Report Form
           </h1>
         </div>
-        <form
-          onSubmit={handleSubmit}
-          className="grid grid-cols-1 gap-6 md:grid-cols-2"
-        >
-          {/* Name Field */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-[rgb(96,147,93)] underline">
-              Name:
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {/* Other form fields */}
+          
+          {/* Image Upload Field */}
+          <div className="mb-2">
+            <label className="block text-sm font-medium text-[rgb(96,147,93)] underline">
+              Upload Image(s)
             </label>
             <input
-              type="text"
-              name="name"
-              placeholder="Your Name"
-              value={formData.name}
-              onChange={handleChange}
-              className="block h-10 w-full rounded-md border border-gray-300 p-2"
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleFileChange}
+              className="block w-full text-gray-500"
             />
           </div>
 
-          {/* Email Field */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-[rgb(96,147,93)] underline">
-              Email:
-            </label>
-            <input
-              type="email"
-              name="email"
-              placeholder="example@mail.com"
-              value={formData.email}
-              onChange={handleChange}
-              className="block h-10 w-full rounded-md border border-gray-300 p-2"
-            />
-          </div>
-
-          {/* Phone Number Field */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-[rgb(96,147,93)] underline">
-              Phone Number:
-            </label>
-            <input
-              type="text"
-              name="phoneNumber"
-              placeholder="(123) 456-7890"
-              value={formData.phoneNumber}
-              onChange={handleChange}
-              className="block h-10 w-full rounded-md border border-gray-300 p-2"
-            />
-          </div>
-
-          {/* Title Field */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-[rgb(96,147,93)] underline">
-              Title:
-            </label>
-            <input
-              type="text"
-              name="title"
-              placeholder="Short Title"
-              value={formData.title}
-              onChange={handleChange}
-              className="block h-10 w-full rounded-md border border-gray-300 p-2"
-            />
-          </div>
-
-          {/* Location Type Dropdown */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-[rgb(96,147,93)] underline">
-              Location Type:
-            </label>
-            <select
-              name="locationType"
-              value={formData.locationType}
-              onChange={handleLocationTypeChange}
-              className="block h-10 w-full rounded-md border border-gray-300 p-2"
-            >
-              <option value="" hidden>
-                {formData.locationType || "Select Location Type"}
-              </option>
-              <option value="address">Enter Address</option>
-              <option value="Current Location">Use Current Location</option>
-            </select>
-          </div>
-
-          {/* Location Field */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-[rgb(96,147,93)] underline">
-              Location:
-            </label>
-            <input
-              type="text"
-              name="location"
-              placeholder={
-                formData.locationType === "Current Location"
-                  ? coordinates || "Fetching coordinates..."
-                  : "Enter Address"
-              }
-              value={formData.location}
-              onChange={handleChange}
-              disabled={formData.locationType === "Current Location"}
-              className="block h-10 w-full rounded-md border border-gray-300 p-2"
-            />
-          </div>
-
-          {/* Bounty Field */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-[rgb(96,147,93)] underline">
-              Bounty:
-            </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
-                $
-              </span>
-              <input
-                type="number"
-                name="bounty"
-                placeholder="Amount"
-                value={formData.bounty}
-                onChange={handleBountyChange}
-                className="block h-10 w-full rounded-md border border-gray-300 p-2 pl-8"
-              />
-            </div>
-          </div>
-
-          {/* Description Field */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-[rgb(96,147,93)] underline">
-              Description:
-            </label>
-            <textarea
-              name="description"
-              placeholder="Detailed description of the issue"
-              value={formData.description}
-              onChange={handleChange}
-              className="block h-20 w-full rounded-md border border-gray-300 p-2"
-            ></textarea>
-          </div>
-
-          <div className="col-span-1 md:col-span-2">
-            {/* Image Upload Field */}
-            <div className="mb-4">
-              <label className="mb-2 block text-sm font-medium text-[rgb(96,147,93)] underline">
-                Upload Image (JPG or PNG):
-                <div>{formData.image ? formData.image.name : ""}</div>
-              </label>
-              <div className="flex items-center justify-between">
-                <div className="flex w-full items-center">
-                  <input
-                    type="file"
-                    name="image"
-                    accept="image/png, image/jpeg"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    id="fileUpload"
-                  />
-                  <label
-                    htmlFor="fileUpload"
-                    className="flex w-full items-center justify-center gap-2 rounded-md bg-[rgb(96,147,93)] px-4 py-3 font-semibold text-white hover:cursor-pointer hover:bg-[rgb(96,140,120)]"
-                  >
-                    <FaFileUpload className="text-xl" />
-                    <span>Upload File</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-            {/* Submit Button */}
+          <div className="flex justify-end space-x-2">
             <button
               type="submit"
-              className="mt-4 w-full rounded-md bg-[rgb(96,147,93)] px-4 py-3 font-semibold text-white hover:bg-[rgb(96,140,120)]"
+              className="rounded-md bg-darker-base-color px-3 py-1 text-white shadow-md transition-all duration-300 hover:scale-105"
             >
               Submit
             </button>
