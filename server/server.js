@@ -1,7 +1,8 @@
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
-const db = require("./config/mongo.js");
+const { db } = require("./config/mongo");
+const Report = require("./models/Report"); // Adjust the path if needed
 
 // const bodyParser = require("body-parser");
 // const { MongoClient } = require("mongodb");
@@ -9,15 +10,17 @@ const db = require("./config/mongo.js");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+app.use(express.json());
+
 app.use(cors());
 // app.use(bodyParser.json());
 
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
 
 app.get("/", (req, res) => {
-    res.send("Hello World");
+  res.send("Hello World");
 });
 
 /* 
@@ -37,24 +40,40 @@ app.get("/", (req, res) => {
 */
 
 app.post("/api/form", async (req, res) => {
-    const data = req.body.form;
-    
-    console.log(data);
+  try {
+    const report = new Report({
+      title: req.body.title,
+      description: req.body.description,
+      image: req.body.image,
+      location: req.body.location,
+      time: req.body.time,
+      bounty: req.body.bounty,
+      locationType: req.body.locationType,
+      name: req.body.name,
+      phoneNumber: req.body.phoneNumber,
+      email: req.body.email,
+    });
 
-    try {
-        // TODO: INSERT DATA
-        res.status(201).json({ message: "Data inserted successfully", result });
-    } catch (error) {
-        res.status(500).json({ error: `An error occurred: ${error.message}` });
-    }
+    const savedReport = await report.save();
+    res
+      .status(201)
+      .json({ message: "Data inserted successfully", report: savedReport });
+  } catch (error) {
+    console.error("Error inserting data:", error.message);
+    res.status(500).json({ error: `An error occurred: ${error.message}` });
+  }
 });
 
 app.get("/api/data", async (req, res) => {
+  try {
+    const database = await db();
+    const usersCollection = database.collection("garbageReport");
 
-    try {
-    
-    } 
-    catch (error) {
-        res.status(500).json({ error: `An error occurred: ${error.message}` });
-    } 
+    // Retrieve documents from the collection and convert them to an array
+    const data = await usersCollection.find({}).toArray();
+    res.status(200).json(data);
+  } catch (error) {
+    console.error(`An error occurred: ${error.message}`);
+    res.status(500).json({ error: `An error occurred: ${error.message}` });
+  }
 });

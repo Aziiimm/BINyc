@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const reportSchema = new mongoose.Schema({
     title: { type: String, required: true },
     description: { type: String, required: true },
-    image: { type: String, match: /^https?:\/\/.+\.(jpg|jpeg|png)$/, required: false },
+    image: { type: String, required: true },
     location: { type: String, required: true },
     time: { type: Date, required: true },
     bounty: { type: String, default: null },
