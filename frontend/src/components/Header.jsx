@@ -2,15 +2,21 @@ import React from "react";
 
 const Header = () => {
   return (
-    <div className="fixed top-0 z-10 w-full bg-teal-600 p-4 text-white">
-      <header className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Queens Air Quality Map</h1>
-        <nav className="space-x-4">
-          <a href="/" className="hover:underline">
+    <div className="fixed top-0 z-10 h-16 w-full bg-[rgb(0,32,23)] p-4 text-white">
+      <header className="flex h-full items-center justify-between">
+        <a href="/">
+          <h1 className="font-oswald text-4xl font-bold" href="">
+            <span className="text-white">BI</span>
+            <span className="text-[rgb(96,147,93)]">Nyc</span>
+          </h1>
+        </a>
+
+        <nav className="space-x-12 text-xl font-bold text-white">
+          <a href="/reports" className="hover:underline">
             Home
           </a>
-          <a href="/chat" className="hover:underline">
-            AI Chat
+          <a href="/form" className="hover:underline">
+            Report Issue
           </a>
         </nav>
       </header>

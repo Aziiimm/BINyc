@@ -7,3 +7,8 @@
   src: url("./assets/fonts/DMSans-VariableFont_opsz,wght.ttf")
     format("truetype");
 }
+
+@font-face {
+  font-family: "Oswald";
+  src: url("./assets/fonts/Oswald-VariableFont_wght.ttf") format("truetype");
+}
