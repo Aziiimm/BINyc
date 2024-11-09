@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import NavBar from "../components/Header";
@@ -6,37 +6,7 @@ import { MdLocationPin } from "react-icons/md";
 import L from "leaflet";
 import ReactDOMServer from "react-dom/server";
 
-// Mock data for trash reports (replace with API data later)
-const mockReports = [
-  {
-    id: 1,
-    title: "Trash Pile on 5th Ave",
-    description: "A large pile of visible trash near the sidewalk.",
-    bounty: "$10",
-    date: "2024-11-07 10:30 AM",
-    coordinates: [40.73061, -73.935242],
-    distance: "0.5 miles",
-  },
-  {
-    id: 2,
-    title: "Overflowing Garbage Bin",
-    description: "Garbage bin overflowing, causing litter.",
-    bounty: "$15",
-    date: "2024-11-06 2:15 PM",
-    coordinates: [40.74161, -73.945242],
-    distance: "1.2 miles",
-  },
-  {
-    id: 3,
-    title: "Illegal Dumping Spot",
-    description: "Trash bags dumped in an alleyway.",
-    bounty: "$20",
-    date: "2024-11-05 6:00 PM",
-    coordinates: [40.72561, -73.955242],
-    distance: "0.8 miles",
-  },
-];
-
+// Custom icon using MdLocationPin from react-icons
 const customIcon = new L.DivIcon({
   className: "custom-pin",
   html: ReactDOMServer.renderToString(
@@ -60,10 +30,45 @@ const MapCenter = ({ coordinates }) => {
 
 const Reports = () => {
   const [userLocation, setUserLocation] = useState([40.73061, -73.935242]);
-  const [reports, setReports] = useState(mockReports);
+  const [reports, setReports] = useState([]);
   const [selectedCoordinates, setSelectedCoordinates] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Fetch user's current location (optional, for demo purposes)
+  // Fetch reports data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/data");
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+        const data = await response.json();
+
+        // Transform data if necessary (e.g., extract coordinates)
+        const formattedData = data.map((item) => ({
+          id: item._id,
+          title: item.title || "Untitled Report",
+          description: item.Description || "No description provided.",
+          bounty: item.Bounty || "No bounty",
+          date: item.Time || "Unknown date",
+          coordinates: item.Location || [40.73061, -73.935242], // Fallback coordinates
+          distance: "Unknown distance", // Placeholder, calculate if needed
+        }));
+
+        setReports(formattedData);
+        setLoading(false);
+      } catch (err) {
+        console.error("Failed to fetch reports:", err);
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Fetch user's current location
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -81,6 +86,19 @@ const Reports = () => {
   const handleReportClick = (coordinates) => {
     setSelectedCoordinates(coordinates);
   };
+
+  if (loading)
+    return (
+      <div className="flex h-screen items-center justify-center">
+        Loading...
+      </div>
+    );
+  if (error)
+    return (
+      <div className="flex h-screen items-center justify-center">
+        Error: {error}
+      </div>
+    );
 
   return (
     <div className="flex h-screen flex-col bg-gray-200">
@@ -101,6 +119,7 @@ const Reports = () => {
               {selectedCoordinates && (
                 <MapCenter coordinates={selectedCoordinates} />
               )}
+              {/* Render Markers for Each Report */}
               {reports.map((report) => (
                 <Marker
                   key={report.id}
