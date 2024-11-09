@@ -7,7 +7,7 @@ import { BiWorld } from "react-icons/bi";
 function LandingPage() {
   return (
     <div
-      className="font-custom flex h-screen w-full bg-cover bg-center"
+      className="flex h-screen w-full bg-cover bg-center font-custom"
       style={{ backgroundImage: `url(${backgroundImage})` }}
     >
       <div className="absolute inset-0 z-0 bg-[rgb(0,128,128)] opacity-60"></div>
@@ -32,7 +32,7 @@ function LandingPage() {
 
         <a
           className="mt-12 w-fit rounded-full bg-[rgb(37,218,197)] px-6 py-4 text-sm font-normal transition-all duration-200 hover:scale-105 hover:bg-teal-500"
-          href="#map"
+          href="/map"
         >
           Go to Map
         </a>
