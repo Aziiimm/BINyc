@@ -3,6 +3,8 @@ const axios = require("axios");
 const cors = require("cors");
 const { db } = require("./config/mongo");
 const Report = require("./models/report");
+// const { uploadToIPFS } = require("./Pinata.js");
+// const { downloadfromIPFS } = require("./Pinata.js");  
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -39,8 +41,8 @@ app.post("/api/form", async (req, res) => {
         const database = await db();
         const usersCollection = database.collection("garbageReport");
 
-        const report = new Report({
-            title : req.body.title,
+        const report = {
+            title: req.body.title,
             description: req.body.description,
             image: req.body.image,
             location: req.body.location,
@@ -50,15 +52,18 @@ app.post("/api/form", async (req, res) => {
             name: req.body.name,
             phoneNumber: req.body.phoneNumber,
             email: req.body.email,
-        });
+        };
 
         const result = await usersCollection.insertOne(report);
-        res.status(201).json({ message: "Data inserted successfully", report: result.ops[0] });
+
+        // Use `result.insertedId` instead of `result.ops[0]`
+        res.status(201).json({ message: "Data inserted successfully", report: { _id: result.insertedId, ...report } });
     } catch (error) {
         console.error("Error inserting data:", error.message);
         res.status(500).json({ error: `An error occurred: ${error.message}` });
     }
 });
+
 
 app.get("/api/data", async (req, res) => {
   try {
